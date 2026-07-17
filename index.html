@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infinite Space Particle System - Three.js</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: #000;
+            font-family: 'Courier New', monospace;
+        }
+
+        #info {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #fff;
+            font-size: 14px;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+            z-index: 100;
+            user-select: none;
+            background: rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 18px 20px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5),
+                        0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+                        0 0 20px rgba(100, 100, 255, 0.05);
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            min-width: 220px;
+            pointer-events: auto;
+        }
+
+        #info.hidden {
+            opacity: 0;
+            transform: translateY(-12px) scale(0.96);
+            pointer-events: none;
+        }
+
+        #info .title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            background: linear-gradient(90deg, #fff, #88ccff, #ff88ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        #info .section {
+            margin-top: 10px;
+            margin-bottom: 6px;
+            font-weight: bold;
+            color: #88ff88;
+            font-size: 12px;
+            letter-spacing: 1px;
+            opacity: 0.9;
+        }
+
+        #info .stat {
+            font-size: 11px;
+            color: #88ff88;
+            margin: 3px 0;
+        }
+
+        #info .control {
+            margin: 3px 0;
+            font-size: 13px;
+        }
+
+        #info .highlight {
+            color: #00ffff;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.4);
+            font-weight: bold;
+        }
+
+        #info .value-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 2px 0;
+            font-size: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        #info .value-label {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        #info .value-data {
+            color: #fff;
+        }
+
+        #info .footer-hint {
+            margin-top: 12px;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.3);
+            text-align: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            padding-top: 10px;
+        }
+
+        #info-toggle {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 101;
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.7);
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            font-family: 'Courier New', monospace;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+            line-height: 1;
+            padding: 0;
+        }
+
+        #info-toggle:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+
+        #fps {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: #0f0;
+            font-size: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            padding: 8px 14px;
+            border-radius: 8px;
+            border: 1px solid rgba(0, 255, 0, 0.15);
+            font-family: 'Courier New', monospace;
+            text-shadow: 0 0 8px rgba(0, 255, 0, 0.3);
+        }
+
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div id="info">
+        <div class="title">GENERATIVE ART SYSTEM</div>
+
+        <div class="stat">5000 particles &middot; Flow visualization</div>
+        <div class="stat">Physics simulation active</div>
+        <div class="stat">Dynamic trails &amp; paths</div>
+
+        <div class="section">CONTROLS</div>
+        <div class="control"><span class="highlight">&uarr; &darr;</span> Zoom in/out</div>
+        <div class="control"><span class="highlight">&larr; &rarr;</span> Orbit speed</div>
+        <div class="control">Press <span class="highlight">R</span> new generation</div>
+        <div class="control">Press <span class="highlight">C</span> color scheme</div>
+        <div class="control">Press <span class="highlight">T</span> toggle trails</div>
+        <div class="control">Press <span class="highlight">SPACE</span> toggle orbit</div>
+        <div class="control">Press <span class="highlight">O</span> auto-regenerate</div>
+        <div class="control">Press <span class="highlight">+/-</span> turbulence</div>
+        <div class="control">Mouse: Drag to rotate view</div>
+        <div class="control">Press <span class="highlight">H</span> toggle panel</div>
+
+        <div class="section">INFO</div>
+        <div id="seed-display" class="value-row"><span class="value-label">Seed</span><span class="value-data">0</span></div>
+        <div id="color-scheme" class="value-row"><span class="value-label">Scheme</span><span class="value-data">Pink/Purple</span></div>
+        <div id="turbulence-display" class="value-row"><span class="value-label">Turbulence</span><span class="value-data">0.80</span></div>
+        <div id="movement-display" class="value-row"><span class="value-label">Physics</span><span class="value-data" style="color: #ffff00;">GRAVITATIONAL_DANCE</span></div>
+        <div id="trail-display" class="value-row"><span class="value-label">Trails</span><span class="value-data" style="color: #00ff88;">ON</span></div>
+        <div id="camera-display" class="value-row"><span class="value-label">Camera</span><span class="value-data" style="color: #00ffff;">Orbit: ON | Speed: 0.15</span></div>
+
+        <div class="footer-hint">[ H ] hide panel</div>
+    </div>
+
+    <button id="info-toggle" title="Show controls (H)">?</button>
+
+    <div id="fps">FPS: 60</div>
+
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
