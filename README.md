@@ -1,4 +1,4 @@
-# Infinite Space Particle System
+# Space Particle System
 
 Sistema generativo de partículas 3D con Three.js. Simula 16 tipos diferentes de movimiento físico en un espacio tridimensional, orbitando desde atractores gravitacionales hasta agujeros negros de Kerr.
 
